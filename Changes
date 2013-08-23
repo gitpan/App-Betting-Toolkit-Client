@@ -3,3 +3,9 @@ Revision history for App-Betting-Toolkit-Client
 0.01    Date/time
         First version, released on an unsuspecting world.
 
+0.011	23-08-2013
+	Updated documentation slightly, fixed some code issues
+
+0.012	23-08-2013
+	Adjusted debug messages, improved documentation further, 
+	Also swapped from encoding JSON manually to Filter::JSON

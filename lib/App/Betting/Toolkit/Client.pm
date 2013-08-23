@@ -4,9 +4,7 @@ use 5.006;
 use strict;
 use warnings;
 
-use JSON;
-
-use POE qw(Component::Client::TCP);
+use POE qw(Component::Client::TCP Filter::JSON Filter::Stackable Filter::Line );
 
 =head1 NAME
 
@@ -14,11 +12,11 @@ App::Betting::Toolkit::Client - The great new App::Betting::Toolkit::Client!
 
 =head1 VERSION
 
-Version 0.011
+Version 0.012
 
 =cut
 
-our $VERSION = '0.011';
+our $VERSION = '0.012';
 
 
 =head1 SYNOPSIS
@@ -64,19 +62,26 @@ sub new {
 
 	$args->{regmode} = 'anonymous' if (!$args->{regmode});
 
+	my $filter = POE::Filter::Stackable->new();
+	$filter->push(
+		POE::Filter::JSON->new( delimiter => 0 ),
+		POE::Filter::Line->new(),
+	);
+
 	$self->{service} = POE::Component::Client::TCP->new(
 		RemoteAddress	=> $args->{host},
 		RemotePort	=> $args->{port},
+		Filter		=> $filter,
 		Connected	=> sub {
 			my ($heap,$kernel) = @_[HEAP,KERNEL];
 
 			my $msg = { event=>'connected', data=>'' };
 
 			if ($args->{regmode} eq 'anonymous') {
-				$heap->{server}->put(encode_json({ query=>'register', method=>'anonymous' }) );
+				$heap->{server}->put({ query=>'register', method=>'anonymous' });
 			} elsif ($args->{regmode} eq 'private') {
 				die "Implement me";
-				$heap->{server}->put(encode_json({ query=>'register', method=>'private', keys=>[] }) );
+				$heap->{server}->put({ query=>'register', method=>'private', keys=>[] });
 			} else {
 				die "Reg mode must be anonymous or private and nothing else..";
 			}
@@ -84,10 +89,16 @@ sub new {
 			$kernel->post($args->{parent},$args->{handler},$msg);
 	        },
         	ServerInput   => sub {
-	                my ($kernel,$input) = @_[KERNEL,ARG0];
-        	        print STDERR "from server: $input\n";
+	                my ($kernel,$heap,$input) = @_[KERNEL,HEAP,ARG0];
 
 			my $req = decode_json($input);
+
+			if ($req->{query} eq 'register') {
+				if (!$req->{error}) {
+					# Ok we need to know what design of GameState packets the server is expecting.
+					$heap->{server}->put( { query=>'register', method=>'anonymous' } );
+				}
+			}
 
 			$kernel->post($args->{parent},$args->{handler},$req);
         	},
