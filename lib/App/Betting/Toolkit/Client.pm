@@ -14,11 +14,11 @@ App::Betting::Toolkit::Client - The great new App::Betting::Toolkit::Client!
 
 =head1 VERSION
 
-Version 0.01
+Version 0.011
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.011';
 
 
 =head1 SYNOPSIS
@@ -32,14 +32,22 @@ Perhaps a little code snippet.
     my $foo = App::Betting::Toolkit::Client->new();
     ...
 
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
 =head1 SUBROUTINES/METHODS
 
 =head2 new
+
+=over 1
+
+Create a new Betting Client, you need to specify a parent, a handler, a host and a port:
+
+	$_[HEAP]->{client} = App::Betting::Toolkit::Client->new({
+		port    => 10001,
+		host    => 'my.bet.server.com',
+		parent  => 'my_data_source',
+		handler => 'my_handler_on_data_source'
+	});
+
+=back
 
 =cut
 
@@ -65,9 +73,10 @@ sub new {
 			my $msg = { event=>'connected', data=>'' };
 
 			if ($args->{regmode} eq 'anonymous') {
-				$heap->{server}->put(encode_json({ query=>'register', keys=>[ qw('special',time) ] }) );
+				$heap->{server}->put(encode_json({ query=>'register', method=>'anonymous' }) );
 			} elsif ($args->{regmode} eq 'private') {
 				die "Implement me";
+				$heap->{server}->put(encode_json({ query=>'register', method=>'private', keys=>[] }) );
 			} else {
 				die "Reg mode must be anonymous or private and nothing else..";
 			}
