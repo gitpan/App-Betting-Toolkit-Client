@@ -4,6 +4,8 @@ use 5.006;
 use strict;
 use warnings;
 
+use Data::Dumper;
+
 use POE qw(Component::Client::TCP Filter::JSON Filter::Stackable Filter::Line );
 
 =head1 NAME
@@ -12,11 +14,11 @@ App::Betting::Toolkit::Client - The great new App::Betting::Toolkit::Client!
 
 =head1 VERSION
 
-Version 0.012
+Version 0.013
 
 =cut
 
-our $VERSION = '0.012';
+our $VERSION = '0.013';
 
 
 =head1 SYNOPSIS
@@ -61,12 +63,9 @@ sub new {
 	# host / port / regmode / handler
 
 	$args->{regmode} = 'anonymous' if (!$args->{regmode});
+	$args->{debug_handler} = 'debug_server' if (!$args->{debug_handler});
 
-	my $filter = POE::Filter::Stackable->new();
-	$filter->push(
-		POE::Filter::JSON->new( delimiter => 0 ),
-		POE::Filter::Line->new(),
-	);
+	my $filter = POE::Filter::JSON->new( json_any => { allow_nonref => 1 } );
 
 	$self->{service} = POE::Component::Client::TCP->new(
 		RemoteAddress	=> $args->{host},
@@ -78,10 +77,10 @@ sub new {
 			my $msg = { event=>'connected', data=>'' };
 
 			if ($args->{regmode} eq 'anonymous') {
-				$heap->{server}->put({ query=>'register', method=>'anonymous' });
+				$heap->{server}->put( $filter->put([{ query=>'register', method=>'anonymous' } ]) );
 			} elsif ($args->{regmode} eq 'private') {
 				die "Implement me";
-				$heap->{server}->put({ query=>'register', method=>'private', keys=>[] });
+				$heap->{server}->put( $filter->put([{ query=>'register', method=>'private', keys=>[] }]) );
 			} else {
 				die "Reg mode must be anonymous or private and nothing else..";
 			}
@@ -91,18 +90,34 @@ sub new {
         	ServerInput   => sub {
 	                my ($kernel,$heap,$input) = @_[KERNEL,HEAP,ARG0];
 
-			my $req = decode_json($input);
+			my $req = $filter->get($input)->[0];
+			my $pkt = { error=>1, msg=>"Could not handle server req", req=>$req };
 
 			if ($req->{query} eq 'register') {
 				if (!$req->{error}) {
 					# Ok we need to know what design of GameState packets the server is expecting.
-					$heap->{server}->put( { query=>'register', method=>'anonymous' } );
+					my $send = $filter->put([ { query=>'gamepacket', method=>'initial' } ]);
+					$heap->{server}->put($send);
+					return;
 				}
+			} elsif ($req->{query} eq 'gamepacket') {
+				# Ok we need to remember this.
+				$heap->{gamepacket} = $req->{data};
+				# ok we have a copy of the gamepacket template so we are ready to roll; lets tell the client
+				$pkt = { query=>'ready' };
 			}
 
-			$kernel->post($args->{parent},$args->{handler},$req);
+			if (!$pkt->{error}) {
+				$kernel->yield('send_to_parent',$pkt);
+			}
+
+			$kernel->post($args->{parent},$args->{debug_handler},$input);
         	},
 		InlineStates  => {
+			send_to_parent => sub {
+				my ($kernel,$req) = @_[KERNEL,ARG0];
+				$kernel->post($args->{parent},$args->{handler},$req);
+			},
 		},
 	);
 
