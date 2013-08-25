@@ -4,21 +4,23 @@ use 5.006;
 use strict;
 use warnings;
 
+use App::Betting::Toolkit::GameState;
+
 use Data::Dumper;
 
 use POE qw(Component::Client::TCP Filter::JSON Filter::Stackable Filter::Line );
 
 =head1 NAME
 
-App::Betting::Toolkit::Client - The great new App::Betting::Toolkit::Client!
+App::Betting::Toolkit::Client - Client to the App::Betting::Toolkit::Server
 
 =head1 VERSION
 
-Version 0.013
+Version 0.014
 
 =cut
 
-our $VERSION = '0.013';
+our $VERSION = '0.014';
 
 
 =head1 SYNOPSIS
@@ -74,7 +76,7 @@ sub new {
 		Connected	=> sub {
 			my ($heap,$kernel) = @_[HEAP,KERNEL];
 
-			my $msg = { event=>'connected', data=>'' };
+			my $msg = { query=>'connected', data=>'' };
 
 			if ($args->{regmode} eq 'anonymous') {
 				$heap->{server}->put( $filter->put([{ query=>'register', method=>'anonymous' } ]) );
@@ -102,7 +104,7 @@ sub new {
 				}
 			} elsif ($req->{query} eq 'gamepacket') {
 				# Ok we need to remember this.
-				$heap->{gamepacket} = $req->{data};
+				$self->{gamepacket} = $req->{data};
 				# ok we have a copy of the gamepacket template so we are ready to roll; lets tell the client
 				$pkt = { query=>'ready' };
 			}
@@ -126,6 +128,13 @@ sub new {
 	return $self;
 }
 
+sub newState {
+	my $self = shift;
+
+	my $return = App::Betting::Toolkit::GameState->load($self->{gamepacket});
+
+	return $return;
+}
 
 
 =head2 function2

@@ -1,5 +1,5 @@
 {
-   "abstract" : "The great new App::Betting::Toolkit::Client!",
+   "abstract" : "Client to the App::Betting::Toolkit::Server",
    "author" : [
       "Paul G Webster <daemon@cpan.org>"
    ],
@@ -37,5 +37,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.013"
+   "version" : "0.014"
 }
