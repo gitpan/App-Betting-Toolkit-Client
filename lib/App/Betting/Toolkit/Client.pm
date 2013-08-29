@@ -16,12 +16,11 @@ App::Betting::Toolkit::Client - Client to the App::Betting::Toolkit::Server
 
 =head1 VERSION
 
-Version 0.016
+Version 0.017
 
 =cut
 
-our $VERSION = '0.016';
-
+our $VERSION = '0.017';
 
 =head1 SYNOPSIS
 
@@ -106,7 +105,7 @@ sub new {
 				# Ok we need to remember this.
 				$self->{gamepacket} = $req->{data};
 				# ok we have a copy of the gamepacket template so we are ready to roll; lets tell the client
-				$pkt = { query=>'ready' };
+				$pkt = { query=>'ready', gamepacket=>$self->{gamepacket} };
 			}
 
 			if (!$pkt->{error}) {
