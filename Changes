@@ -31,8 +31,11 @@ Revision history for App-Betting-Toolkit-Client
 0.019	05-09-2013
 	Fixed issue with send handler and Filter::Json
 
-0.0191	05-09-1024
+0.0191	05-09-2013
 	Fixed more issues with the send handler and Filter::JSON...
 
-0.0192	05-09-1024
+0.0192	05-09-2013
 	Added debugging to send handler to trace problem..
+
+0.0193	05-09-2013
+	...

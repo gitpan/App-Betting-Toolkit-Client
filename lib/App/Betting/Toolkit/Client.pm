@@ -16,11 +16,11 @@ App::Betting::Toolkit::Client - Client to the App::Betting::Toolkit::Server
 
 =head1 VERSION
 
-Version 0.0192
+Version 0.0193
 
 =cut
 
-our $VERSION = '0.0192';
+our $VERSION = '0.0193';
 
 =head1 SYNOPSIS
 
@@ -125,7 +125,9 @@ sub new {
 			send_to_server	=> sub {
 				my ($kernel,$heap,$req) = @_[KERNEL,HEAP,ARG0];
 
-				warn Dumper($req);
+				open(my $fh,'>>','/tmp/debug-x');
+				print $fh Dumper($req);
+				close($fh);
 
 				my $pkt = $filter->put([ $req ]);
 				$heap->{server}->put( $pkt );
