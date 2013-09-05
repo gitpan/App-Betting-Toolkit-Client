@@ -4,8 +4,6 @@ use 5.006;
 use strict;
 use warnings;
 
-$ENV{JSON_ANY_ORDER} = 'JSON XS';
-
 use App::Betting::Toolkit::GameState;
 
 use Data::Dumper;
@@ -18,22 +16,21 @@ App::Betting::Toolkit::Client - Client to the App::Betting::Toolkit::Server
 
 =head1 VERSION
 
-Version 0.0201
+Version 0.0202
 
 =cut
 
-our $VERSION = '0.0201';
+our $VERSION = '0.0202';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+Provide an easy to use way of transporting your GameState objects to a central server over a network
 
 Perhaps a little code snippet.
 
     use App::Betting::Toolkit::Client;
 
     my $foo = App::Betting::Toolkit::Client->new();
-    ...
 
 =head1 SUBROUTINES/METHODS
 
@@ -44,10 +41,11 @@ Perhaps a little code snippet.
 Create a new Betting Client, you need to specify a parent, a handler, a host and a port:
 
 	$_[HEAP]->{client} = App::Betting::Toolkit::Client->new({
-		port    => 10001,
-		host    => 'my.bet.server.com',
-		parent  => 'my_data_source',
-		handler => 'my_handler_on_data_source'
+		port		=> 10001,
+		host		=> 'my.bet.server.com',
+		parent		=> 'my_data_source',
+		handler		=> 'my_handler_on_data_source',
+		debug_handler	=> 'debug_server',
 	});
 
 =back
@@ -68,16 +66,11 @@ sub new {
 	$args->{regmode} = 'anonymous' if (!$args->{regmode});
 	$args->{debug_handler} = 'debug_server' if (!$args->{debug_handler});
 
-#	my $filter = POE::Filter::JSON->new( json_any => { allow_nonref => 1, indent => 0 } );
-	my $filter = POE::Filter::Reference->new();
-
 	$self->{service} = POE::Component::Client::TCP->new(
 		RemoteAddress	=> $args->{host},
 		RemotePort	=> $args->{port},
-		Filter		=> $filter,
-		Started		=> sub {
-			$self->{myid} = $_[SESSION]->ID;
-		},
+		Filter		=> POE::Filter::Reference->new("Storable"),
+		Started		=> sub { $self->{myid} = $_[SESSION]->ID },
 		Connected	=> sub {
 			my ($heap,$kernel) = @_[HEAP,KERNEL];
 
@@ -142,12 +135,44 @@ sub new {
 	return $self;
 }
 
+=head2 send
+
+=over 1
+
+Send a raw data packet over to the server, use with care!
+
+=back
+
+	$object->send({ query=>'echo', data=>time });
+
+=cut
+
 sub send {
 	my $self = shift;
 	my $pkt = shift;
 
 	POE::Kernel->post($self->{myid},'send',$pkt);
 }
+
+=head2 sendMatch
+
+=over 1
+
+Send a GameState object over the wire to the connected server.
+
+=back
+
+	$object->matchSend($gameState);
+
+=cut
+
+sub matchSend {
+	my $self = shift;
+	my $gameState = shift;
+
+	POE::Kernel->post($self->{myid},'send',{ query=>'matchdata', data=>$gameState });
+}
+
 
 sub newState {
 	my $self = shift;
@@ -157,13 +182,6 @@ sub newState {
 	return $return;
 }
 
-
-=head2 function2
-
-=cut
-
-sub function2 {
-}
 
 =head1 AUTHOR
 
