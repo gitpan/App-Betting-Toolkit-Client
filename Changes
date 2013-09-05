@@ -57,3 +57,6 @@ Revision history for App-Betting-Toolkit-Client
 
 0.0199	05-09-2013
 	Trying to force the JSON filter to remove \n for us.
+
+0.0200	05-09-2013
+	Totally got rid of filter JSON and moved over to Filter::Reference

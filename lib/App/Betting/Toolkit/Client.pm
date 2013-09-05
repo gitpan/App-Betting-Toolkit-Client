@@ -10,7 +10,7 @@ use App::Betting::Toolkit::GameState;
 
 use Data::Dumper;
 
-use POE qw(Component::Client::TCP Filter::JSON );
+use POE qw(Component::Client::TCP Filter::Reference);
 
 =head1 NAME
 
@@ -18,11 +18,11 @@ App::Betting::Toolkit::Client - Client to the App::Betting::Toolkit::Server
 
 =head1 VERSION
 
-Version 0.0199
+Version 0.0200
 
 =cut
 
-our $VERSION = '0.0199';
+our $VERSION = '0.0200';
 
 =head1 SYNOPSIS
 
@@ -68,7 +68,8 @@ sub new {
 	$args->{regmode} = 'anonymous' if (!$args->{regmode});
 	$args->{debug_handler} = 'debug_server' if (!$args->{debug_handler});
 
-	my $filter = POE::Filter::JSON->new( json_any => { allow_nonref => 1, indent => 0 } );
+#	my $filter = POE::Filter::JSON->new( json_any => { allow_nonref => 1, indent => 0 } );
+	my $filter = POE::Filter::Reference->new();
 
 	$self->{service} = POE::Component::Client::TCP->new(
 		RemoteAddress	=> $args->{host},
@@ -83,10 +84,10 @@ sub new {
 			my $msg = { query=>'connected', data=>'' };
 
 			if ($args->{regmode} eq 'anonymous') {
-				$heap->{server}->put( $filter->put([{ query=>'register', method=>'anonymous' } ]) );
+				$heap->{server}->put( { query=>'register', method=>'anonymous' } );
 			} elsif ($args->{regmode} eq 'private') {
 				die "Implement me";
-				$heap->{server}->put( $filter->put([{ query=>'register', method=>'private', keys=>[] }]) );
+				$heap->{server}->put( { query=>'register', method=>'private', keys=>[] } );
 			} else {
 				die "Reg mode must be anonymous or private and nothing else..";
 			}
@@ -96,7 +97,7 @@ sub new {
         	ServerInput   => sub {
 	                my ($kernel,$heap,$input) = @_[KERNEL,HEAP,ARG0];
 
-			my $req = $filter->get($input)->[0];
+			my $req = $input
 			my $pkt = { error=>1, msg=>"Could not handle server req", req=>$req };
 
 			if ($req->{query} eq 'register') {
@@ -127,8 +128,7 @@ sub new {
 			send_to_server	=> sub {
 				my ($kernel,$heap,$req) = @_[KERNEL,HEAP,ARG0];
 
-				my $pkt = $filter->put([ $req ]);
-				$heap->{server}->put( $pkt );
+				$heap->{server}->put( $req );
 			},
 			send		=> sub {
 				my ($kernel,$heap,$req) = @_[KERNEL,HEAP,ARG0];
