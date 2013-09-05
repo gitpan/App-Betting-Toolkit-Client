@@ -4,6 +4,8 @@ use 5.006;
 use strict;
 use warnings;
 
+$ENV{JSON_ANY_ORDER} = 'JSON XS';
+
 use App::Betting::Toolkit::GameState;
 
 use Data::Dumper;
@@ -16,11 +18,11 @@ App::Betting::Toolkit::Client - Client to the App::Betting::Toolkit::Server
 
 =head1 VERSION
 
-Version 0.0195
+Version 0.0196
 
 =cut
 
-our $VERSION = '0.0195';
+our $VERSION = '0.0196';
 
 =head1 SYNOPSIS
 
