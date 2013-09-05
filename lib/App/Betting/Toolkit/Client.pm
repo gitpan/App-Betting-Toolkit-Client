@@ -18,11 +18,11 @@ App::Betting::Toolkit::Client - Client to the App::Betting::Toolkit::Server
 
 =head1 VERSION
 
-Version 0.0198
+Version 0.0199
 
 =cut
 
-our $VERSION = '0.0198';
+our $VERSION = '0.0199';
 
 =head1 SYNOPSIS
 
@@ -68,7 +68,7 @@ sub new {
 	$args->{regmode} = 'anonymous' if (!$args->{regmode});
 	$args->{debug_handler} = 'debug_server' if (!$args->{debug_handler});
 
-	my $filter = POE::Filter::JSON->new( json_any => { allow_nonref => 1 } );
+	my $filter = POE::Filter::JSON->new( json_any => { allow_nonref => 1, indent => 0 } );
 
 	$self->{service} = POE::Component::Client::TCP->new(
 		RemoteAddress	=> $args->{host},
@@ -126,8 +126,6 @@ sub new {
 			},
 			send_to_server	=> sub {
 				my ($kernel,$heap,$req) = @_[KERNEL,HEAP,ARG0];
-
-				$req =~ s#\n##g;
 
 				my $pkt = $filter->put([ $req ]);
 				$heap->{server}->put( $pkt );

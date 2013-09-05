@@ -54,3 +54,6 @@ Revision history for App-Betting-Toolkit-Client
 
 0.0198	05-09-2013
 	Enforced that no \n are present in the string fed to the JSON filter
+
+0.0199	05-09-2013
+	Trying to force the JSON filter to remove \n for us.
