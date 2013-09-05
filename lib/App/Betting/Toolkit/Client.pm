@@ -18,11 +18,11 @@ App::Betting::Toolkit::Client - Client to the App::Betting::Toolkit::Server
 
 =head1 VERSION
 
-Version 0.0200
+Version 0.0201
 
 =cut
 
-our $VERSION = '0.0200';
+our $VERSION = '0.0201';
 
 =head1 SYNOPSIS
 
@@ -97,7 +97,7 @@ sub new {
         	ServerInput   => sub {
 	                my ($kernel,$heap,$input) = @_[KERNEL,HEAP,ARG0];
 
-			my $req = $input
+			my $req = $input;
 			my $pkt = { error=>1, msg=>"Could not handle server req", req=>$req };
 
 			if ($req->{query} eq 'register') {

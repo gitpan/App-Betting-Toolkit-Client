@@ -60,3 +60,6 @@ Revision history for App-Betting-Toolkit-Client
 
 0.0200	05-09-2013
 	Totally got rid of filter JSON and moved over to Filter::Reference
+
+0.0201	05-09-2013
+	Fixed typo in code
