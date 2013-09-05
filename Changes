@@ -24,3 +24,6 @@ Revision history for App-Betting-Toolkit-Client
 
 0.017	29-08-2013
 	Small change to ready query
+
+0.018	05-09-2013
+	Added send handler to send from the parent to the server

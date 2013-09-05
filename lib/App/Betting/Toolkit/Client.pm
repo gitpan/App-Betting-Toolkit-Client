@@ -16,11 +16,11 @@ App::Betting::Toolkit::Client - Client to the App::Betting::Toolkit::Server
 
 =head1 VERSION
 
-Version 0.017
+Version 0.018
 
 =cut
 
-our $VERSION = '0.017';
+our $VERSION = '0.018';
 
 =head1 SYNOPSIS
 
@@ -72,6 +72,9 @@ sub new {
 		RemoteAddress	=> $args->{host},
 		RemotePort	=> $args->{port},
 		Filter		=> $filter,
+		Started		=> sub {
+			$self->{myid} = $_[SESSION]->ID;
+		},
 		Connected	=> sub {
 			my ($heap,$kernel) = @_[HEAP,KERNEL];
 
@@ -109,15 +112,20 @@ sub new {
 			}
 
 			if (!$pkt->{error}) {
+				$pkt->{id} = $self->{id};
 				$kernel->yield('send_to_parent',$pkt);
 			}
 
 			$kernel->post($args->{parent},$args->{debug_handler},$input);
         	},
 		InlineStates  => {
-			send_to_parent => sub {
+			send_to_parent	=> sub {
 				my ($kernel,$req) = @_[KERNEL,ARG0];
 				$kernel->post($args->{parent},$args->{handler},$req);
+			},
+			send		=> sub {
+				my ($kernel,$heap,$req) = @_[KERNEL,HEAP,ARG0];
+				$heap->{server}->put($req);
 			},
 		},
 	);
@@ -125,6 +133,13 @@ sub new {
 	bless $self, $class;	
 
 	return $self;
+}
+
+sub send {
+	my $self = shift;
+	my $pkt = shift;
+
+	POE::Kernel->post($self->{myid},'send',$pkt);
 }
 
 sub newState {
