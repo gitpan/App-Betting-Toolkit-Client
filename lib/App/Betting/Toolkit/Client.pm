@@ -8,7 +8,7 @@ use App::Betting::Toolkit::GameState;
 
 use Data::Dumper;
 
-use POE qw(Component::Client::TCP Filter::JSON Filter::Stackable Filter::Line );
+use POE qw(Component::Client::TCP Filter::JSON );
 
 =head1 NAME
 
@@ -16,11 +16,11 @@ App::Betting::Toolkit::Client - Client to the App::Betting::Toolkit::Server
 
 =head1 VERSION
 
-Version 0.018
+Version 0.019
 
 =cut
 
-our $VERSION = '0.018';
+our $VERSION = '0.019';
 
 =head1 SYNOPSIS
 
@@ -125,7 +125,7 @@ sub new {
 			},
 			send		=> sub {
 				my ($kernel,$heap,$req) = @_[KERNEL,HEAP,ARG0];
-				$heap->{server}->put($req);
+				$heap->{server}->put( $filter->put([ $req ]) );
 			},
 		},
 	);
