@@ -16,11 +16,11 @@ App::Betting::Toolkit::Client - Client to the App::Betting::Toolkit::Server
 
 =head1 VERSION
 
-Version 0.019
+Version 0.0191
 
 =cut
 
-our $VERSION = '0.019';
+our $VERSION = '0.0191';
 
 =head1 SYNOPSIS
 
@@ -100,8 +100,7 @@ sub new {
 			if ($req->{query} eq 'register') {
 				if (!$req->{error}) {
 					# Ok we need to know what design of GameState packets the server is expecting.
-					my $send = $filter->put([ { query=>'gamepacket', method=>'initial' } ]);
-					$heap->{server}->put($send);
+					$kernel->yield('send_to_server',{ query=>'gamepacket', method=>'initial' });
 					return;
 				}
 			} elsif ($req->{query} eq 'gamepacket') {
@@ -123,9 +122,15 @@ sub new {
 				my ($kernel,$req) = @_[KERNEL,ARG0];
 				$kernel->post($args->{parent},$args->{handler},$req);
 			},
+			send_to_server	=> sub {
+				my ($kernel,$heap,$req) = @_[KERNEL,HEAP,ARG0];
+
+				my $pkt = $filter->put([ $req ]);
+				$heap->{server}->put( $pkt );
+			},
 			send		=> sub {
 				my ($kernel,$heap,$req) = @_[KERNEL,HEAP,ARG0];
-				$heap->{server}->put( $filter->put([ $req ]) );
+				$kernel->yield('send_to_server',$req);
 			},
 		},
 	);
